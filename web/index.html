@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Bro</title>
+<meta name="description" content="Bro, tu hermano mayor con voz. Un acompañante con inteligencia artificial.">
+<meta name="theme-color" content="#1F7A6B">
+<meta name="robots" content="noindex,nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Bro">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+:root{
+  --bg:#EDF3F1; --surface:#FFFFFF; --soft:#DDE9E5; --ink:#17302B; --muted:#5B726C;
+  --accent:#1F7A6B; --accent-ink:#FFFFFF; --warm:#B26A12; --line:#C9D9D4; --halo:#A7D0C6;
+}
+@media (prefers-color-scheme: dark){ :root{
+  --bg:#0F1C1A; --surface:#182926; --soft:#213531; --ink:#E4EFEC; --muted:#93AAA4;
+  --accent:#5CC4B0; --accent-ink:#06211C; --warm:#F0B866; --line:#2C433E; --halo:#2E5A51; color-scheme:dark } }
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{min-height:100vh;min-height:100dvh;padding:max(16px,env(safe-area-inset-top)) 16px max(20px,env(safe-area-inset-bottom));display:flex;justify-content:center}
+main{width:100%;max-width:480px;display:flex;flex-direction:column;gap:16px}
+h1{margin:4px 0 0;font-size:1.5rem;letter-spacing:.2px}
+p{margin:0}
+.muted{color:var(--muted);font-size:.9rem}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.center{align-items:center;text-align:center}
+#orb{width:168px;height:168px;border-radius:50%;border:0;background:var(--accent);color:var(--accent-ink);font:inherit;font-weight:700;font-size:1.05rem;cursor:pointer;position:relative;box-shadow:0 0 0 10px var(--halo);transition:box-shadow .4s,transform .2s;-webkit-tap-highlight-color:transparent}
+#orb:active{transform:scale(.97)}
+#orb[disabled]{opacity:.7;cursor:default}
+#orb.on{animation:resp 3.2s ease-in-out infinite}
+#orb.habla{animation:habla 1.1s ease-in-out infinite}
+@keyframes resp{0%,100%{box-shadow:0 0 0 10px var(--halo)}50%{box-shadow:0 0 0 22px var(--halo)}}
+@keyframes habla{0%,100%{box-shadow:0 0 0 12px var(--halo)}50%{box-shadow:0 0 0 30px var(--halo)}}
+@media (prefers-reduced-motion: reduce){ #orb.on,#orb.habla{animation:none} }
+#estado{min-height:1.5em;font-weight:600}
+button,.btn{font:inherit;border:1px solid var(--line);background:var(--soft);color:var(--ink);border-radius:14px;padding:10px 14px;cursor:pointer;min-height:44px}
+button.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.ghost{background:transparent}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row>*{flex:1 1 auto}
+#log{display:flex;flex-direction:column;gap:8px;max-height:38vh;overflow:auto;margin:0;padding:0;list-style:none}
+#log li{padding:8px 12px;border-radius:14px;max-width:92%;overflow-wrap:anywhere}
+#log li.b{background:var(--soft);align-self:flex-start}
+#log li.u{background:var(--accent);color:var(--accent-ink);align-self:flex-end}
+label{font-size:.8rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);display:block;margin-bottom:4px}
+input,textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+textarea{min-height:140px;resize:vertical}
+details>summary{cursor:pointer;font-weight:600;min-height:44px;display:flex;align-items:center}
+.aviso{font-size:.8rem;color:var(--muted)}
+.aviso b{color:var(--warm)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <header><h1>Bro</h1><p class="muted" id="sub">Tu hermano mayor, con voz.</p></header>
+
+  <section class="card center" aria-live="polite">
+    <button id="orb" type="button" aria-label="Hablar con Bro">Hablar con Bro</button>
+    <p id="estado">Toca el círculo y háblale.</p>
+    <p class="muted" id="ayuda">Habla normal, como con un hermano. Te contesta de una.</p>
+  </section>
+
+  <section class="card" id="conv" hidden>
+    <ul id="log" aria-label="Conversación"></ul>
+    <div class="row">
+      <button id="copiar" class="pri" type="button">Copiar la conversación</button>
+    </div>
+    <p class="muted" id="copiado" hidden>Copiada. Pégala en tu app: Bro → Bro en vivo → Pegar.</p>
+  </section>
+
+  <section class="card" id="setup" hidden>
+    <h2 style="margin:0;font-size:1.1rem">Antes de empezar</h2>
+    <p class="muted">Bro no sabe nada de ti hasta que se lo cuentas. Lo que escribas aquí se queda solo en este teléfono, nunca en internet. Si tienes tu app, abre este enlace desde ahí y se llena solo.</p>
+  </section>
+
+  <details class="card" id="datos">
+    <summary>Lo que Bro sabe de mí</summary>
+    <div><label for="nom">Tu nombre</label><input id="nom" autocomplete="off" maxlength="40" placeholder="Cómo quieres que te diga"></div>
+    <div><label for="per">Lo que Bro debe saber de ti</label><textarea id="per" maxlength="9000" placeholder="Quién eres, qué te preocupa, qué te ayuda, qué te cae mal, tu rutina…"></textarea></div>
+    <div class="row"><button id="guardar" class="pri" type="button">Guardar en este teléfono</button><button id="borrar" class="ghost" type="button">Borrar todo</button></div>
+    <p class="muted" id="gmsg" hidden></p>
+  </details>
+
+  <p class="aviso">Bro es un acompañante con inteligencia artificial, no un médico ni un psicólogo. Si es una emergencia, llama al <b>123</b>. Si sientes que quieres hacerte daño, llama a la línea <b>106</b>.</p>
+</main>
+
+<script src="vendor/elevenlabs-client.min.js"></script>
+<script>
+(()=>{
+'use strict';
+const AGENT_ID='agent_3601m7n76pt7eq7rfs4yg1969k5j', KEY='bro-web-v1', KLAST='bro-web-ultima';
+const $=id=>document.getElementById(id);
+const rd=k=>{ try{ return JSON.parse(localStorage.getItem(k)||'null') }catch(e){ return null } };
+const wr=(k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)) }catch(e){} };
+let st=rd(KEY)||{}, conv=null, lines=rd(KLAST)||[], wake=null, cerrando=false, intento=0;
+
+/* Si abres este enlace desde tu app, los datos vienen en el fragmento (#p=...). El fragmento nunca viaja por internet. */
+(function(){
+  const m=/[#&]p=([^&]+)/.exec(location.hash); if(!m) return;
+  try{
+    const b=m[1].replace(/-/g,'+').replace(/_/g,'/'), bin=atob(b+'==='.slice((b.length+3)%4)), j=JSON.parse(new TextDecoder().decode(Uint8Array.from(bin,c=>c.charCodeAt(0))));
+    if(j&&typeof j==='object'){ if(j.n) st.n=String(j.n).slice(0,40); if(j.p) st.p=String(j.p).slice(0,9000); st.h=j.h?String(j.h).slice(0,3000):''; st.t=Date.now(); wr(KEY,st) }
+  }catch(e){}
+  try{ history.replaceState(null,'',location.pathname+location.search) }catch(e){}
+})();
+
+const estado=t=>{ $('estado').textContent=t };
+function pintaDatos(){ $('nom').value=st.n||''; $('per').value=st.p||''; const sin=!(st.p&&st.p.trim()); $('setup').hidden=!sin; $('datos').open=sin&&!st.n }
+function pintaLog(){
+  $('conv').hidden=!lines.length; const ul=$('log'); ul.textContent='';
+  lines.slice(-10).forEach(l=>{ const li=document.createElement('li'); li.className=l.r==='u'?'u':'b'; li.textContent=l.t; ul.appendChild(li) });
+  ul.scrollTop=ul.scrollHeight;
+}
+const textoConv=()=>lines.map(l=>(l.r==='u'?'Yo: ':'Bro: ')+l.t).join('\n');
+
+async function pedirPantalla(){ try{ if('wakeLock' in navigator) wake=await navigator.wakeLock.request('screen') }catch(e){} }
+function soltarPantalla(){ try{ if(wake){ wake.release(); wake=null } }catch(e){} }
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&conv&&!wake) pedirPantalla() });
+
+function ui(on,habla){ const o=$('orb'); o.classList.toggle('on',!!on&&!habla); o.classList.toggle('habla',!!habla); o.textContent=on?'Terminar':'Hablar con Bro'; o.setAttribute('aria-label',on?'Terminar la conversación':'Hablar con Bro'); o.disabled=false }
+
+async function iniciar(){
+  if(conv||cerrando) return;
+  if(!window.ElevenLabsClient||!ElevenLabsClient.Conversation){ estado('No pude cargar la voz de Bro. Revisa tu internet y recarga.'); return }
+  $('orb').disabled=true; estado('Pidiendo el micrófono…');
+  try{ const s=await navigator.mediaDevices.getUserMedia({audio:true}); s.getTracks().forEach(t=>t.stop()) }
+  catch(e){ ui(false); estado('Necesito el micrófono. Actívalo en Ajustes, Safari, Micrófono, y vuelve a tocar.'); return }
+  lines=[]; wr(KLAST,lines); pintaLog(); estado('Conectando con Bro…');
+  const vars={ nombre:(st.n||'hermano').slice(0,40) }; if(st.p&&st.p.trim()) vars.perfil=st.p.slice(0,9000); if(st.h&&st.t&&Date.now()-st.t<6*3600e3) vars.hoy=st.h.slice(0,3000);
+  const mi=++intento; let tm=null;
+  try{
+    tm=setTimeout(()=>{ if(!conv&&intento===mi){ intento++; ui(false); estado('Tardó demasiado en conectar. Revisa tu internet y vuelve a tocar.') } },20000);
+    const c=await ElevenLabsClient.Conversation.startSession({
+      agentId:AGENT_ID, connectionType:'webrtc', dynamicVariables:vars,
+      onConnect:()=>{ ui(true,false); estado('Te escucho.'); pedirPantalla() },
+      onDisconnect:()=>{ fin() },
+      onMessage:m=>{ const t=String(m&&m.message||'').trim(); if(!t) return; lines.push({r:(m.role==='user'||m.source==='user')?'u':'b',t}); wr(KLAST,lines.slice(-80)); pintaLog() },
+      onModeChange:m=>{ const h=m&&m.mode==='speaking'; ui(true,h); estado(h?'Bro está hablando…':'Te escucho.') },
+      onError:msg=>{ estado('Se cortó la conexión. Toca el círculo para volver a intentar.'); console.warn('Bro:',msg) }
+    });
+    clearTimeout(tm);
+    if(intento!==mi){ try{ await c.endSession() }catch(e){} return }
+    conv=c;
+  }catch(e){ clearTimeout(tm); if(intento===mi){ conv=null; ui(false); estado('No pude conectar con Bro ahora. Revisa tu internet y vuelve a tocar.') } console.warn(e) }
+}
+function fin(){ const hubo=!!conv; conv=null; cerrando=false; soltarPantalla(); ui(false); if(hubo) estado(lines.length?'Terminó. Copia la conversación para tu app.':'Terminó.') ; pintaLog() }
+async function terminar(){ if(!conv) return; cerrando=true; const c=conv; try{ await c.endSession() }catch(e){} fin() }
+
+$('orb').addEventListener('click',()=>{ conv?terminar():iniciar() });
+$('copiar').addEventListener('click',async()=>{
+  const t=textoConv(); if(!t) return; let ok=false;
+  try{ await navigator.clipboard.writeText(t); ok=true }catch(e){ const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); try{ ok=document.execCommand('copy') }catch(_){ } ta.remove() }
+  const c=$('copiado'); c.hidden=false; c.textContent=ok?'Copiada. Pégala en tu app: Bro → Bro en vivo → Pegar.':'No pude copiarla. Mantén pulsado el texto de arriba para copiarlo.'
+});
+$('guardar').addEventListener('click',()=>{ st.n=$('nom').value.trim().slice(0,40); st.p=$('per').value.trim().slice(0,9000); wr(KEY,st); const g=$('gmsg'); g.hidden=false; g.textContent='Guardado en este teléfono.'; pintaDatos() });
+$('borrar').addEventListener('click',()=>{ if(!confirm('¿Borrar lo que Bro sabe de ti y la última conversación de este teléfono?')) return; st={}; lines=[]; try{ localStorage.removeItem(KEY); localStorage.removeItem(KLAST) }catch(e){} pintaDatos(); pintaLog(); const g=$('gmsg'); g.hidden=false; g.textContent='Todo borrado de este teléfono.' });
+window.addEventListener('pagehide',()=>{ if(conv){ try{ conv.endSession() }catch(e){} } });
+
+pintaDatos(); pintaLog(); ui(false);
+})();
+</script>
+</body>
+</html>
